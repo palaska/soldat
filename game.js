@@ -15,7 +15,7 @@ GameState.prototype.preload = function() {
 // Setup the example
 GameState.prototype.create = function() {
   // Start arcade physics
-  this.game.physics.startSystem(Phaser.Physics.ARCADE);
+  this.game.physics.startSystem(Phaser.Physics.P2);
 
   // Set stage background color
   this.game.stage.backgroundColor = 0x4488cc;
@@ -28,12 +28,10 @@ GameState.prototype.create = function() {
   var i, x, y;
   for(i = 0; i < NUMBER_OF_WALLS; i++) {
       x = i * this.game.width/NUMBER_OF_WALLS + 50;
-      y = this.game.rnd.integerInRange(350, this.game.height - 300);
+      y = this.game.rnd.integerInRange(450, this.game.height - 300);
       var wall = this.walls.create(x, y, 'ground');
       wall.body.immovable = true;
   }
-
-  console.log(this.walls);
 
   // Show FPS
   this.game.time.advancedTiming = true;
@@ -42,7 +40,7 @@ GameState.prototype.create = function() {
   // Create platforms
   this.platforms.enableBody = true;
 
-  for ( var j = 0; j < 12; j++) {
+  for ( var j = 0; j < 20; j++) {
     var ground = this.platforms.create(j * 70, this.game.world.height - 36, 'ground');
 
     ground.body.immovable = true;
@@ -51,22 +49,34 @@ GameState.prototype.create = function() {
   // Create player
   this.player = this.game.add.sprite(36, this.game.world.height - 100, 'dude');
   this.player.life = 100;
+  this.player.jetpack = 100;
   this.game.physics.arcade.enable(this.player);
 
   this.player.body.bounce.y = 0;
   this.player.body.gravity.y = 3000;
+  this.player.body.maxVelocity.x = 400;
+  this.player.body.maxVelocity.y = 1000;
   this.player.body.collideWorldBounds = true;
 
   this.player.animations.add('left', [0,1,2,3], 10, true);
   this.player.animations.add('right', [5,6,7,8], 10, true);
 
   this.cursors = this.game.input.keyboard.createCursorKeys();
+
   this.lastDirection = 'right';
 
   this.lifeBarBorder = this.game.add.sprite(this.game.width - 210, 20, 'block');
   this.lifeBarBorder.scale.setTo(this.player.life/20, 0.4);
   this.lifeBarBorder.tint = 0x0033CC;
   this.lifeBar = this.game.add.sprite(this.game.width - 210, 20, 'block');
+  this.lifeBar.tint = 0x45ed45;
+
+  this.jetpackBorder = this.game.add.sprite(this.game.width - 430, 20, 'block');
+  this.jetpackBorder.scale.setTo(this.player.life/20, 0.4);
+  this.jetpackBorder.tint = 0x003399;
+  this.jetpackBar = this.game.add.sprite(this.game.width - 430, 20, 'block');
+  this.jetpackBar.tint = 0x0033CC;
+
 };
 
 // The update() method is called every frame
@@ -76,21 +86,44 @@ GameState.prototype.update = function() {
   }
 
   this.lifeBar.scale.setTo(this.player.life/20, 0.4);
-  this.lifeBar.tint = 0x45ed45;
+  this.jetpackBar.scale.setTo(this.player.jetpack/20, 0.4);
 
   this.barWidth = this.player.life;
 
   this.game.physics.arcade.collide(this.player, this.platforms);
   this.game.physics.arcade.collide(this.player, this.walls);
 
+  if(this.game.input.keyboard.isDown(Phaser.Keyboard.V) && (this.player.jetpack > 0)) {
+    this.player.body.velocity.y += -70;
+    this.player.jetpack += -2;
+    this.usingJetpack = true;
+  } else if(this.player.jetpack < 100) {
+    this.usingJetpack = false;
+    this.player.jetpack += 0.4;
+  }
+
+  if(this.usingJetpack) {
+    this.player.body.maxVelocity.x = 800;
+  } else {
+    this.player.body.maxVelocity.x = 400;
+  }
+
   // Player movement
-  this.player.body.velocity.x = 0;
-  if (this.cursors.left.isDown) {
-    this.player.body.velocity.x = -400;
+  if (this.cursors.left.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.A)) {
+    if(this.usingJetpack) {
+      this.player.body.velocity.x += -65;
+    } else {
+      this.player.body.velocity.x += -35;
+    }
+
     this.lastDirection = 'left';
     this.player.animations.play(this.lastDirection);
-  } else if(this.cursors.right.isDown) {
-    this.player.body.velocity.x = 400;
+  } else if(this.cursors.right.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.D)) {
+    if(this.usingJetpack) {
+      this.player.body.velocity.x += 65;
+    } else {
+      this.player.body.velocity.x += 35;
+    }
     this.lastDirection = 'right';
     this.player.animations.play(this.lastDirection);
   } else {
@@ -103,11 +136,20 @@ GameState.prototype.update = function() {
     this.player.animations.stop();
   }
 
-  if (this.cursors.up.isDown && this.player.body.touching.down) {
-    this.player.body.velocity.y = -1000;
+  if ((this.cursors.up.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.W)) && this.player.body.touching.down) {
+    this.player.body.velocity.y = -800;
+  }
+  if ((this.cursors.down.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.S)) && !this.player.body.touching.down) {
+    this.player.body.velocity.y += 100;
+  }
+
+  if(this.player.body.velocity.x < 0) {
+    this.player.body.velocity.x += 20;
+  } else if(this.player.body.velocity.x > 0) {
+    this.player.body.velocity.x -= 20;
   }
 };
 
 // Setup game
-var game = new Phaser.Game(800, 450, Phaser.AUTO, 'game');
+var game = new Phaser.Game(1440, 700, Phaser.AUTO, 'game');
 game.state.add('game', GameState, true);
