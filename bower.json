@@ -1,0 +1,23 @@
+{
+  "name": "soldat",
+  "version": "0.0.0",
+  "authors": [
+    "Demircan Celebi <demircancelebi@gmail.com>"
+  ],
+  "description": "Soldat Game",
+  "keywords": [
+    "soldat",
+    "game"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "phaser-official": "~2.0.4"
+  }
+}
