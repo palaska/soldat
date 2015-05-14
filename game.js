@@ -10,6 +10,8 @@ GameState.prototype.preload = function() {
   this.game.load.image('light', '/assets/light.png');
   this.game.load.image('ground', '/assets/grass.png');
   this.game.load.spritesheet('dude', '/assets/dude.png', 32, 48);
+  this.game.load.spritesheet('balls', '/assets/balls.png', 17, 17);
+
 };
 
 // Setup the example
@@ -52,6 +54,11 @@ GameState.prototype.create = function() {
   this.player.jetpack = 100;
   this.game.physics.arcade.enable(this.player);
 
+  this.jetpackEmitter = this.game.add.emitter(this.player.body.x + 10, this.player.body.y + 50);
+  this.jetpackEmitter.bounce.setTo(0.5, 0.5);
+  this.jetpackEmitter.setYSpeed(500,700);
+  this.jetpackEmitter.makeParticles('balls', 1, 250, 1, true);
+
   this.player.body.bounce.y = 0;
   this.player.body.gravity.y = 3000;
   this.player.body.maxVelocity.x = 400;
@@ -93,18 +100,25 @@ GameState.prototype.update = function() {
   this.game.physics.arcade.collide(this.player, this.platforms);
   this.game.physics.arcade.collide(this.player, this.walls);
 
-  if(this.game.input.keyboard.isDown(Phaser.Keyboard.V) && (this.player.jetpack > 0)) {
+  // Jetpack
+  if(this.game.input.keyboard.isDown(Phaser.Keyboard.V) && (this.player.jetpack > 2)) {
     this.player.body.velocity.y += -70;
     this.player.jetpack += -2;
+    if(this.jetpackEmitter.on === false) {
+      this.jetpackEmitter.start(false, 1000, 20);
+    }
     this.usingJetpack = true;
-  } else if(this.player.jetpack < 100) {
+  } else {
     this.usingJetpack = false;
-    this.player.jetpack += 0.4;
+    if (this.player.jetpack < 100) {
+      this.player.jetpack += 0.4;
+    }
   }
 
   if(this.usingJetpack) {
     this.player.body.maxVelocity.x = 800;
   } else {
+    this.jetpackEmitter.on = false;
     this.player.body.maxVelocity.x = 400;
   }
 
