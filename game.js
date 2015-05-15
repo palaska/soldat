@@ -9,6 +9,7 @@ GameState.prototype.preload = function() {
   this.game.load.image('block', '/assets/block.png');
   this.game.load.image('light', '/assets/light.png');
   this.game.load.image('ground', '/assets/grass.png');
+  this.game.load.image('crosshair', '/assets/crosshair.png');
   this.game.load.spritesheet('dude', '/assets/dude.png', 32, 48);
   this.game.load.spritesheet('jp', '/assets/jp.png', 5, 5);
 };
@@ -16,7 +17,7 @@ GameState.prototype.preload = function() {
 // Setup the example
 GameState.prototype.create = function() {
   // Start arcade physics
-  this.game.physics.startSystem(Phaser.Physics.P2);
+  this.game.physics.startSystem(Phaser.Physics.ARCADE);
 
   // Set stage background color
   this.game.stage.backgroundColor = 0x4488cc;
@@ -83,6 +84,9 @@ GameState.prototype.create = function() {
   this.jetpackBar = this.game.add.sprite(this.game.width - 430, 20, 'block');
   this.jetpackBar.tint = 0x0033CC;
 
+  this.crosshair = game.add.sprite(16, 16, 'crosshair');
+  this.game.input.addMoveCallback(this.onMouseMove, this);
+
 };
 
 // The update() method is called every frame
@@ -98,6 +102,11 @@ GameState.prototype.update = function() {
   this.updateHUD();
 };
 
+GameState.prototype.onMouseMove = function(pointer, x, y, downState) {
+  this.crosshair.x = x - 8;
+  this.crosshair.y = y - 8;
+};
+
 GameState.prototype.updateHUD = function() {
   if (this.game.time.fps !== 0) {
     this.fpsText.setText(this.game.time.fps + ' FPS');
@@ -109,7 +118,7 @@ GameState.prototype.updateHUD = function() {
 };
 
 GameState.prototype.updateJetpack = function() {
-  if(this.game.input.keyboard.isDown(Phaser.Keyboard.V) && (this.player.jetpack > 2)) {
+  if(this.game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR) && (this.player.jetpack > 2)) {
     this.player.body.velocity.y += -70;
     this.player.jetpack += -2;
     if(this.jetpackEmitter.on === false) {
@@ -132,6 +141,12 @@ GameState.prototype.updateJetpack = function() {
 };
 
 GameState.prototype.updateMovement = function() {
+  if((this.crosshair.x - 10) > this.player.body.x) {
+    this.lastDirection = 'right';
+  } else {
+    this.lastDirection = 'left';
+  }
+
   // Player movement
   if (this.cursors.left.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.A)) {
     if(this.usingJetpack) {
@@ -141,7 +156,6 @@ GameState.prototype.updateMovement = function() {
       this.player.body.velocity.x += -35;
     }
 
-    this.lastDirection = 'left';
     this.player.animations.play(this.lastDirection);
   } else if(this.cursors.right.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.D)) {
     if(this.usingJetpack) {
@@ -150,7 +164,7 @@ GameState.prototype.updateMovement = function() {
     } else {
       this.player.body.velocity.x += 35;
     }
-    this.lastDirection = 'right';
+
     this.player.animations.play(this.lastDirection);
   } else {
     if (this.lastDirection === 'left') {
@@ -159,10 +173,10 @@ GameState.prototype.updateMovement = function() {
     } else {
       this.jetpackEmitter.x = this.player.body.x + 10;
       this.player.frame = 5;
-
     }
     this.player.animations.stop();
   }
+
   this.jetpackEmitter.y = this.player.body.y + 45;
 
 
@@ -181,5 +195,5 @@ GameState.prototype.updateMovement = function() {
 };
 
 // Setup game
-var game = new Phaser.Game(1440, 700, Phaser.AUTO, 'game');
+var game = new Phaser.Game(1420, 700, Phaser.AUTO, 'game');
 game.state.add('game', GameState, true);
