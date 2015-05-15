@@ -10,8 +10,7 @@ GameState.prototype.preload = function() {
   this.game.load.image('light', '/assets/light.png');
   this.game.load.image('ground', '/assets/grass.png');
   this.game.load.spritesheet('dude', '/assets/dude.png', 32, 48);
-  this.game.load.spritesheet('balls', '/assets/balls.png', 17, 17);
-
+  this.game.load.spritesheet('jp', '/assets/jp.png', 5, 5);
 };
 
 // Setup the example
@@ -54,10 +53,10 @@ GameState.prototype.create = function() {
   this.player.jetpack = 100;
   this.game.physics.arcade.enable(this.player);
 
-  this.jetpackEmitter = this.game.add.emitter(this.player.body.x + 10, this.player.body.y + 50);
+  this.jetpackEmitter = this.game.add.emitter(this.player.body.x + 10, this.player.body.y + 45);
   this.jetpackEmitter.bounce.setTo(0.5, 0.5);
   this.jetpackEmitter.setYSpeed(500,700);
-  this.jetpackEmitter.makeParticles('balls', 1, 250, 1, true);
+  this.jetpackEmitter.makeParticles('jp', 1, 250, 1, true);
 
   this.player.body.bounce.y = 0;
   this.player.body.gravity.y = 3000;
@@ -126,6 +125,7 @@ GameState.prototype.update = function() {
   if (this.cursors.left.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.A)) {
     if(this.usingJetpack) {
       this.player.body.velocity.x += -65;
+      this.jetpackEmitter.x = this.player.body.x + 23;
     } else {
       this.player.body.velocity.x += -35;
     }
@@ -134,6 +134,7 @@ GameState.prototype.update = function() {
     this.player.animations.play(this.lastDirection);
   } else if(this.cursors.right.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.D)) {
     if(this.usingJetpack) {
+      this.jetpackEmitter.x = this.player.body.x + 10;
       this.player.body.velocity.x += 65;
     } else {
       this.player.body.velocity.x += 35;
@@ -142,13 +143,17 @@ GameState.prototype.update = function() {
     this.player.animations.play(this.lastDirection);
   } else {
     if (this.lastDirection === 'left') {
+      this.jetpackEmitter.x = this.player.body.x + 23;
       this.player.frame = 2;
     } else {
+      this.jetpackEmitter.x = this.player.body.x + 10;
       this.player.frame = 5;
 
     }
     this.player.animations.stop();
   }
+  this.jetpackEmitter.y = this.player.body.y + 45;
+
 
   if ((this.cursors.up.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.W)) && this.player.body.touching.down) {
     this.player.body.velocity.y = -800;
