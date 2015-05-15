@@ -87,19 +87,28 @@ GameState.prototype.create = function() {
 
 // The update() method is called every frame
 GameState.prototype.update = function() {
+  // Collisions
+  this.game.physics.arcade.collide(this.player, this.platforms);
+  this.game.physics.arcade.collide(this.player, this.walls);
+
+  // Jetpack & Movement
+  this.updateJetpack();
+  this.updateMovement();
+
+  this.updateHUD();
+};
+
+GameState.prototype.updateHUD = function() {
   if (this.game.time.fps !== 0) {
     this.fpsText.setText(this.game.time.fps + ' FPS');
   }
-
   this.lifeBar.scale.setTo(this.player.life/20, 0.4);
   this.jetpackBar.scale.setTo(this.player.jetpack/20, 0.4);
 
   this.barWidth = this.player.life;
+};
 
-  this.game.physics.arcade.collide(this.player, this.platforms);
-  this.game.physics.arcade.collide(this.player, this.walls);
-
-  // Jetpack
+GameState.prototype.updateJetpack = function() {
   if(this.game.input.keyboard.isDown(Phaser.Keyboard.V) && (this.player.jetpack > 2)) {
     this.player.body.velocity.y += -70;
     this.player.jetpack += -2;
@@ -120,7 +129,9 @@ GameState.prototype.update = function() {
     this.jetpackEmitter.on = false;
     this.player.body.maxVelocity.x = 400;
   }
+};
 
+GameState.prototype.updateMovement = function() {
   // Player movement
   if (this.cursors.left.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.A)) {
     if(this.usingJetpack) {
