@@ -13,7 +13,7 @@ GameState.prototype.preload = function() {
   this.game.load.image('light', '/assets/light.png');
   this.game.load.image('ground', '/assets/grass.png');
   this.game.load.image('rifle', '/assets/rifle.png');
-  this.game.load.image('crosshair', '/assets/crosshair.png');
+  this.game.load.image('crosshair', '/assets/target.png');
   this.game.load.image('jp', '/assets/jp.png');
   this.game.load.spritesheet('dude', '/assets/dude.png', 32, 48);
 };
@@ -70,6 +70,7 @@ GameState.prototype.create = function() {
   this.jetpackEmitter.bounce.setTo(0.5, 0.5);
   this.jetpackEmitter.setYSpeed(500,700);
   this.jetpackEmitter.makeParticles('jp', 1, 250, 1, true);
+  this.jetpackEmitter.maxParticleScale = 0.1;
 
   this.player.body.bounce.y = 0;
   this.player.body.gravity.y = 3000;
