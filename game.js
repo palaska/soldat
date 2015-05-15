@@ -7,6 +7,7 @@ var getArctan = function getArctan(slope) {
   var deg = Math.atan(slope);
   return deg * (180.0 / Math.PI);
 };
+
 // Load images and sounds
 GameState.prototype.preload = function() {
   this.game.load.image('block', '/assets/block.png');
@@ -111,7 +112,7 @@ GameState.prototype.createHUD = function() {
   this.jetpackBorder.tint = 0x003399;
   this.jetpackBar = this.game.add.sprite(this.game.width - 430, 20, 'block');
   this.jetpackBar.tint = 0x0033CC;
-  
+
   this.jetpackBorder.fixedToCamera = true;
   this.jetpackBar.fixedToCamera = true;
 };
@@ -250,5 +251,5 @@ GameState.prototype.updateMovement = function() {
 };
 
 // Setup game
-var game = new Phaser.Game(1400, 800, Phaser.AUTO, 'game');
+var game = new Phaser.Game(1400, 600, Phaser.AUTO, 'game');
 game.state.add('game', GameState, true);
