@@ -3,15 +3,19 @@
 'use strict';
 
 var GameState = function(game) {};
-
+var getArctan = function getArctan(slope) {
+  var deg = Math.atan(slope);
+  return deg * (180.0 / Math.PI);
+};
 // Load images and sounds
 GameState.prototype.preload = function() {
   this.game.load.image('block', '/assets/block.png');
   this.game.load.image('light', '/assets/light.png');
   this.game.load.image('ground', '/assets/grass.png');
+  this.game.load.image('rifle', '/assets/rifle.png');
   this.game.load.image('crosshair', '/assets/crosshair.png');
+  this.game.load.image('jp', '/assets/jp.png');
   this.game.load.spritesheet('dude', '/assets/dude.png', 32, 48);
-  this.game.load.spritesheet('jp', '/assets/jp.png', 5, 5);
 };
 
 // Setup the example
@@ -54,6 +58,14 @@ GameState.prototype.create = function() {
   this.player.jetpack = 100;
   this.game.physics.arcade.enable(this.player);
 
+  this.bullets = this.game.add.group();
+  this.bullets.enableBody = true;
+  this.bullets.physicsBodyType = Phaser.Physics.ARCADE;
+
+  this.bullets.createMultiple(50, 'jp');
+  this.bullets.setAll('checkWorldBounds', true);
+  this.bullets.setAll('outOfBoundsKill', true);
+
   this.jetpackEmitter = this.game.add.emitter(this.player.body.x + 10, this.player.body.y + 45);
   this.jetpackEmitter.bounce.setTo(0.5, 0.5);
   this.jetpackEmitter.setYSpeed(500,700);
@@ -86,6 +98,7 @@ GameState.prototype.create = function() {
 
   this.crosshair = game.add.sprite(16, 16, 'crosshair');
   this.game.input.addMoveCallback(this.onMouseMove, this);
+  this.game.input.onDown.add(this.fire, this);
 
 };
 
@@ -94,6 +107,8 @@ GameState.prototype.update = function() {
   // Collisions
   this.game.physics.arcade.collide(this.player, this.platforms);
   this.game.physics.arcade.collide(this.player, this.walls);
+  this.game.physics.arcade.collide(this.bullets, this.walls, this.collisionHandler);
+  this.game.physics.arcade.collide(this.bullets, this.platforms, this.collisionHandler);
 
   // Jetpack & Movement
   this.updateJetpack();
@@ -102,9 +117,23 @@ GameState.prototype.update = function() {
   this.updateHUD();
 };
 
+GameState.prototype.collisionHandler = function (bullet, obj) {
+  bullet.kill();
+
+  // TODO: if obj is another player, decrease his life
+};
+
 GameState.prototype.onMouseMove = function(pointer, x, y, downState) {
   this.crosshair.x = x - 8;
   this.crosshair.y = y - 8;
+};
+
+GameState.prototype.fire = function() {
+  var bullet = this.bullets.getFirstDead();
+
+  bullet.reset(this.player.x + 10, this.player.y + 25);
+
+  this.game.physics.arcade.moveToPointer(bullet, 2000);
 };
 
 GameState.prototype.updateHUD = function() {
@@ -192,6 +221,11 @@ GameState.prototype.updateMovement = function() {
   } else if(this.player.body.velocity.x > 0) {
     this.player.body.velocity.x -= 20;
   }
+
+  // this.rifle.anchor.setTo(0.3, 0.3);
+  // this.rifle.angle = -55 - getArctan((this.crosshair.x - this.rifle.x)/(this.crosshair.y - this.rifle.y));
+  // this.rifle.x = this.player.body.x + 15;
+  // this.rifle.y = this.player.body.y + 30;
 };
 
 // Setup game
