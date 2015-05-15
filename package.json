@@ -1,0 +1,19 @@
+{
+  "name": "soldat",
+  "version": "1.0.0",
+  "description": "run `bower install` first use Anvil to serve files: http://anvilformac.com/",
+  "main": "game.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://osatici@bitbucket.org/kuryeapp/soldat.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.12.3"
+  }
+}
