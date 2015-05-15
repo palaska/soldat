@@ -23,6 +23,8 @@ GameState.prototype.create = function() {
   // Start arcade physics
   this.game.physics.startSystem(Phaser.Physics.ARCADE);
 
+  this.game.world.setBounds(0, 0, 3000, 1200);
+
   // Set stage background color
   this.game.stage.backgroundColor = 0x4488cc;
 
@@ -34,19 +36,15 @@ GameState.prototype.create = function() {
   var i, x, y;
   for(i = 0; i < NUMBER_OF_WALLS; i++) {
       x = i * this.game.width/NUMBER_OF_WALLS + 50;
-      y = this.game.rnd.integerInRange(450, this.game.height - 300);
+      y = this.game.rnd.integerInRange(850, this.game.height - 100);
       var wall = this.walls.create(x, y, 'ground');
       wall.body.immovable = true;
   }
 
-  // Show FPS
-  this.game.time.advancedTiming = true;
-  this.fpsText = this.game.add.text(20, 20, '', { font: '16px Arial', fill: '#ffffff' });
-
   // Create platforms
   this.platforms.enableBody = true;
 
-  for ( var j = 0; j < 20; j++) {
+  for ( var j = 0; j < 40; j++) {
     var ground = this.platforms.create(j * 70, this.game.world.height - 36, 'ground');
 
     ground.body.immovable = true;
@@ -84,6 +82,20 @@ GameState.prototype.create = function() {
   this.cursors = this.game.input.keyboard.createCursorKeys();
 
   this.lastDirection = 'right';
+  this.game.inputEnabled = true;
+
+  this.crosshair = this.game.add.sprite(0, 0, 'crosshair');
+  this.game.input.addMoveCallback(this.onMouseMove, this);
+  this.game.input.onDown.add(this.fire, this);
+
+  this.createHUD();
+};
+
+GameState.prototype.createHUD = function() {
+  // Show FPS
+  this.game.time.advancedTiming = true;
+  this.fpsText = this.game.add.text(20, 20, '', { font: '16px Arial', fill: '#ffffff' });
+  this.fpsText.fixedToCamera = true;
 
   this.lifeBarBorder = this.game.add.sprite(this.game.width - 210, 20, 'block');
   this.lifeBarBorder.scale.setTo(this.player.life/20, 0.4);
@@ -91,25 +103,29 @@ GameState.prototype.create = function() {
   this.lifeBar = this.game.add.sprite(this.game.width - 210, 20, 'block');
   this.lifeBar.tint = 0x45ed45;
 
+  this.lifeBarBorder.fixedToCamera = true;
+  this.lifeBar.fixedToCamera = true;
+
   this.jetpackBorder = this.game.add.sprite(this.game.width - 430, 20, 'block');
   this.jetpackBorder.scale.setTo(this.player.life/20, 0.4);
   this.jetpackBorder.tint = 0x003399;
   this.jetpackBar = this.game.add.sprite(this.game.width - 430, 20, 'block');
   this.jetpackBar.tint = 0x0033CC;
-
-  this.crosshair = game.add.sprite(16, 16, 'crosshair');
-  this.game.input.addMoveCallback(this.onMouseMove, this);
-  this.game.input.onDown.add(this.fire, this);
-
+  
+  this.jetpackBorder.fixedToCamera = true;
+  this.jetpackBar.fixedToCamera = true;
 };
 
-// The update() method is called every frame
 GameState.prototype.update = function() {
   // Collisions
   this.game.physics.arcade.collide(this.player, this.platforms);
   this.game.physics.arcade.collide(this.player, this.walls);
   this.game.physics.arcade.collide(this.bullets, this.walls, this.collisionHandler);
   this.game.physics.arcade.collide(this.bullets, this.platforms, this.collisionHandler);
+
+  this.game.camera.follow(this.player);
+  this.game.camera.deadzone = new Phaser.Rectangle(150, 150, 500, 300);
+  this.game.camera.focusOnXY(0, 0);
 
   // Jetpack & Movement
   this.updateJetpack();
@@ -125,8 +141,12 @@ GameState.prototype.collisionHandler = function (bullet, obj) {
 };
 
 GameState.prototype.onMouseMove = function(pointer, x, y, downState) {
-  this.crosshair.x = x - 8;
-  this.crosshair.y = y - 8;
+  this.updateCrosshair((pointer.worldX - 8), (pointer.worldY - 8));
+};
+
+GameState.prototype.updateCrosshair = function(x, y) {
+  this.crosshair.x = x;
+  this.crosshair.y = y;
 };
 
 GameState.prototype.fire = function() {
@@ -150,7 +170,7 @@ GameState.prototype.updateHUD = function() {
 GameState.prototype.updateJetpack = function() {
   if(this.game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR) && (this.player.jetpack > 2)) {
     this.player.body.velocity.y += -70;
-    this.player.jetpack += -2;
+    // this.player.jetpack += -2;
     if(this.jetpackEmitter.on === false) {
       this.jetpackEmitter.start(false, 1000, 20);
     }
@@ -230,5 +250,5 @@ GameState.prototype.updateMovement = function() {
 };
 
 // Setup game
-var game = new Phaser.Game(1420, 700, Phaser.AUTO, 'game');
+var game = new Phaser.Game(1400, 800, Phaser.AUTO, 'game');
 game.state.add('game', GameState, true);
