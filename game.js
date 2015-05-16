@@ -37,10 +37,12 @@ var Player = function (game) {
 
 Player.prototype.fire = function() {
   var bullet = this.bullets.getFirstDead();
+  this.game.physics.arcade.enable(bullet);
 
   bullet.reset(this.p.x + 10, this.p.y + 25);
+  bullet.body.gravity.y = 300;
 
-  this.game.physics.arcade.moveToPointer(bullet, 2000);
+  this.game.physics.arcade.moveToPointer(bullet, 2500);
 };
 
 var GameState = function() {};
@@ -66,7 +68,7 @@ GameState.prototype.create = function() {
   // Start arcade physics
   this.game.physics.startSystem(Phaser.Physics.ARCADE);
 
-  this.game.world.setBounds(0, 0, 3000, 1200);
+  this.game.world.setBounds(0, 0, 2000, 1200);
 
   // Set stage background color
   this.game.stage.backgroundColor = 0x4488cc;
@@ -86,7 +88,6 @@ GameState.prototype.create = function() {
 
   // Create platforms
   this.player = new Player(this.game);
-  console.log(this.player);
 
   this.platforms.enableBody = true;
 
@@ -137,18 +138,27 @@ GameState.prototype.update = function() {
   // Collisions
   this.game.physics.arcade.collide(this.player.p, this.platforms);
   this.game.physics.arcade.collide(this.player.p, this.walls);
-  this.game.physics.arcade.collide(this.bullets, this.walls, this.collisionHandler);
-  this.game.physics.arcade.collide(this.bullets, this.platforms, this.collisionHandler);
+  this.game.physics.arcade.collide(this.player.bullets, this.walls, this.collisionHandler);
+  this.game.physics.arcade.collide(this.player.bullets, this.platforms, this.collisionHandler);
 
   this.game.camera.follow(this.player.p);
-  this.game.camera.deadzone = new Phaser.Rectangle(150, 150, 500, 300);
-  this.game.camera.focusOnXY(0, 0);
+  this.game.camera.deadzone = new Phaser.Rectangle(this.game.width/2 - 100, this.game.height - 200, 200, 10);
 
   // Jetpack & Movement
   this.updateJetpack();
   this.updateMovement();
 
   this.updateHUD();
+};
+
+GameState.prototype.render = function() {
+    var zone = this.game.camera.deadzone;
+
+    this.game.context.fillStyle = 'rgba(255,0,0,0.6)';
+    this.game.context.fillRect(zone.x, zone.y, zone.width, zone.height);
+
+    this.game.debug.cameraInfo(this.game.camera, 32, 32);
+    this.game.debug.spriteCoords(this.player.p, 32, 500);
 };
 
 GameState.prototype.collisionHandler = function (bullet, obj) {
@@ -267,5 +277,5 @@ GameState.prototype.updateMovement = function() {
 };
 
 // Setup game
-var game = new Phaser.Game(1400, 600, Phaser.AUTO, 'game');
+var game = new Phaser.Game(1400, 600, Phaser.CANVAS, 'game');
 game.state.add('game', GameState, true);
