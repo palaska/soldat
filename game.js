@@ -4,8 +4,8 @@
 var Player = function (game) {
   this.game = game;
 
-  this.p = this.game.add.sprite(36, this.game.world.height - 100, 'dude');
-  this.focus = this.game.add.sprite(36, this.game.world.height-100);
+  this.p = this.game.add.sprite(canvasWidth + 100, 3000 - canvasHeight - 100, 'dude');
+  this.focus = this.game.add.sprite(canvasWidth + 100, 3000 - canvasHeight - 100);
   this.game.physics.arcade.enable(this.p);
 
   this.life = 100;
@@ -69,20 +69,20 @@ GameState.prototype.create = function() {
   // Start arcade physics
   this.game.physics.startSystem(Phaser.Physics.ARCADE);
 
-  this.game.world.setBounds(0, 0, 2000, 1200);
+  this.game.world.setBounds(0, 0, 5000, 3000);
 
   // Set stage background color
   this.game.stage.backgroundColor = 0x4488cc;
 
   // Add a second light and move it back and forth forever
-  var NUMBER_OF_WALLS = 5;
+  var NUMBER_OF_WALLS = 30;
   this.walls = this.game.add.group();
   this.walls.enableBody = true;
   this.platforms = this.game.add.group();
   var i, x, y;
   for(i = 0; i < NUMBER_OF_WALLS; i++) {
-      x = i * this.game.width/NUMBER_OF_WALLS + 50;
-      y = this.game.rnd.integerInRange(850, this.game.height - 100);
+      x = i * (5000 - canvasWidth*2)/NUMBER_OF_WALLS + 50 + canvasWidth;
+      y = this.game.rnd.integerInRange(canvasHeight + 200, 3000 - canvasHeight - 100);
       var wall = this.walls.create(x, y, 'ground');
       wall.body.immovable = true;
   }
@@ -92,10 +92,23 @@ GameState.prototype.create = function() {
 
   this.platforms.enableBody = true;
 
-  for ( var j = 0; j < 40; j++) {
-    var ground = this.platforms.create(j * 70, this.game.world.height - 36, 'ground');
+  for ( var j = 0; j < 80; j++) {
+    var ground = this.platforms.create(j * 70, this.game.world.height - canvasHeight - 36, 'ground');
+    var leftWall = this.platforms.create(canvasWidth , j * 70,'ground');
+    var rightWall = this.platforms.create(5000 - canvasWidth, j * 70, 'ground');
+    var ceiling = this.platforms.create(j*70 ,canvasHeight + 36, 'ground');
+    ceiling.anchor.setTo(0.5,0.5);
+    leftWall.anchor.setTo(0.5,0.5);
+    rightWall.anchor.setTo(0.5,0.5);
+    
+    ceiling.angle = 180;
+    leftWall.angle = 90;
+    rightWall.angle = 270;
 
     ground.body.immovable = true;
+    ceiling.body.immovable = true;
+    leftWall.body.immovable = true;
+    rightWall.body.immovable = true;
   }
 
   // Create player
@@ -278,5 +291,8 @@ GameState.prototype.updateMovement = function() {
 };
 
 // Setup game
-var game = new Phaser.Game(1400, 600, Phaser.CANVAS, 'game');
+var canvasWidth = 1400;
+var canvasHeight = 800;
+
+var game = new Phaser.Game(canvasWidth, canvasHeight, Phaser.CANVAS, 'game');
 game.state.add('game', GameState, true);
