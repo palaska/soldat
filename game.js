@@ -5,6 +5,7 @@ var Player = function (game) {
   this.game = game;
 
   this.p = this.game.add.sprite(36, this.game.world.height - 100, 'dude');
+  this.focus = this.game.add.sprite(36, this.game.world.height-100);
   this.game.physics.arcade.enable(this.p);
 
   this.life = 100;
@@ -140,7 +141,11 @@ GameState.prototype.update = function() {
   this.game.physics.arcade.collide(this.player.bullets, this.walls, this.collisionHandler);
   this.game.physics.arcade.collide(this.player.bullets, this.platforms, this.collisionHandler);
 
-  this.game.camera.follow(this.player.p);
+  //update camera focus
+  this.player.focus.position.x = (this.player.p.position.x+this.game.input.mousePointer.worldX)/2;
+  this.player.focus.position.y = (this.player.p.position.y+this.game.input.mousePointer.worldY)/2;
+
+  this.game.camera.follow(this.player.focus);
   //this.game.camera.deadzone = new Phaser.Rectangle(this.game.width/2 - 100, this.game.height - 200, 200, 10);
 
   // Jetpack & Movement
