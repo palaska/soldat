@@ -111,6 +111,24 @@ GameState.prototype.create = function() {
     rightWall.body.immovable = true;
   }
 
+  // Empty black spaces
+  var graphics = this.game.add.graphics(0, 0);
+  graphics.beginFill(0x000000);
+  
+  graphics.moveTo(0,0);
+  graphics.lineTo(5000,0);
+  graphics.lineTo(5000,3000);
+  graphics.lineTo(0,3000);
+  graphics.lineTo(0,0);
+  graphics.lineTo(canvasWidth,canvasHeight);
+  graphics.lineTo(canvasWidth,3000-canvasHeight);
+  graphics.lineTo(5000-canvasWidth,3000-canvasHeight);
+  graphics.lineTo(5000 - canvasWidth,canvasHeight);
+  graphics.lineTo(canvasWidth,canvasHeight);
+  graphics.endFill();
+
+
+
   // Create player
   this.cursors = this.game.input.keyboard.createCursorKeys();
 
@@ -169,11 +187,7 @@ GameState.prototype.update = function() {
 };
 
 GameState.prototype.render = function() {
-    //var zone = this.game.camera.deadzone;
-
-    this.game.context.fillStyle = 'rgba(255,0,0,0.6)';
-    //this.game.context.fillRect(zone.x, zone.y, zone.width, zone.height);
-
+    //var zone = this.game.camera.deadzone; 
     this.game.debug.cameraInfo(this.game.camera, 32, 32);
     this.game.debug.spriteCoords(this.player.p, 32, 500);
 };
