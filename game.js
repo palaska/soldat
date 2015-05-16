@@ -103,7 +103,6 @@ GameState.prototype.create = function() {
   this.game.inputEnabled = true;
 
   this.crosshair = this.game.add.sprite(0, 0, 'crosshair');
-  this.game.input.addMoveCallback(this.onMouseMove, this);
   this.game.input.onDown.add(this.player.fire, this.player);
 
   this.createHUD();
@@ -142,20 +141,20 @@ GameState.prototype.update = function() {
   this.game.physics.arcade.collide(this.player.bullets, this.platforms, this.collisionHandler);
 
   this.game.camera.follow(this.player.p);
-  this.game.camera.deadzone = new Phaser.Rectangle(this.game.width/2 - 100, this.game.height - 200, 200, 10);
+  //this.game.camera.deadzone = new Phaser.Rectangle(this.game.width/2 - 100, this.game.height - 200, 200, 10);
 
   // Jetpack & Movement
   this.updateJetpack();
   this.updateMovement();
-
+  this.updateCrosshair((this.game.input.mousePointer.worldX - 8), (this.game.input.mousePointer.worldY - 8));
   this.updateHUD();
 };
 
 GameState.prototype.render = function() {
-    var zone = this.game.camera.deadzone;
+    //var zone = this.game.camera.deadzone;
 
     this.game.context.fillStyle = 'rgba(255,0,0,0.6)';
-    this.game.context.fillRect(zone.x, zone.y, zone.width, zone.height);
+    //this.game.context.fillRect(zone.x, zone.y, zone.width, zone.height);
 
     this.game.debug.cameraInfo(this.game.camera, 32, 32);
     this.game.debug.spriteCoords(this.player.p, 32, 500);
@@ -167,9 +166,6 @@ GameState.prototype.collisionHandler = function (bullet, obj) {
   // TODO: if obj is another player, decrease his life
 };
 
-GameState.prototype.onMouseMove = function(pointer, x, y, downState) {
-  this.updateCrosshair((pointer.worldX - 8), (pointer.worldY - 8));
-};
 
 GameState.prototype.updateCrosshair = function(x, y) {
   this.crosshair.x = x;
