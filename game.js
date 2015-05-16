@@ -1,12 +1,54 @@
 // Copyright © 2015 Demircan Celebi
 // Licensed under the terms of the MIT License
 'use strict';
+var Player = function (game) {
+  this.game = game;
 
-var GameState = function(game) {};
-var getArctan = function getArctan(slope) {
-  var deg = Math.atan(slope);
-  return deg * (180.0 / Math.PI);
+  this.p = this.game.add.sprite(36, this.game.world.height - 100, 'dude');
+  this.game.physics.arcade.enable(this.p);
+
+  this.life = 100;
+  this.jetpack = 100;
+  this.bullets = this.game.add.group();
+  this.bullets.enableBody = true;
+  this.bullets.physicsBodyType = Phaser.Physics.ARCADE;
+
+  this.bullets.createMultiple(50, 'jp');
+  this.bullets.setAll('checkWorldBounds', true);
+  this.bullets.setAll('outOfBoundsKill', true);
+
+  this.jetpackEmitter = this.game.add.emitter(this.p.body.x + 10, this.p.body.y + 45);
+  this.jetpackEmitter.bounce.setTo(0.5, 0.5);
+  this.jetpackEmitter.setYSpeed(500,700);
+  this.jetpackEmitter.makeParticles('jp', 1, 250, 1, true);
+  this.jetpackEmitter.maxParticleScale = 0.1;
+
+  this.p.body.bounce.y = 0;
+  this.p.body.gravity.y = 3000;
+  this.p.body.maxVelocity.x = 400;
+  this.p.body.maxVelocity.y = 1000;
+  this.p.body.collideWorldBounds = true;
+
+  this.p.animations.add('left', [0,1,2,3], 10, true);
+  this.p.animations.add('right', [5,6,7,8], 10, true);
+
+  this.lastDirection = 'right';
 };
+
+Player.prototype.fire = function() {
+  var bullet = this.bullets.getFirstDead();
+
+  bullet.reset(this.p.x + 10, this.p.y + 25);
+
+  this.game.physics.arcade.moveToPointer(bullet, 2000);
+};
+
+var GameState = function() {};
+
+// var getArctan = function getArctan(slope) {
+//   var deg = Math.atan(slope);
+//   return deg * (180.0 / Math.PI);
+// };
 
 // Load images and sounds
 GameState.prototype.preload = function() {
@@ -43,6 +85,9 @@ GameState.prototype.create = function() {
   }
 
   // Create platforms
+  this.player = new Player(this.game);
+  console.log(this.player);
+
   this.platforms.enableBody = true;
 
   for ( var j = 0; j < 40; j++) {
@@ -52,42 +97,13 @@ GameState.prototype.create = function() {
   }
 
   // Create player
-  this.player = this.game.add.sprite(36, this.game.world.height - 100, 'dude');
-  this.player.life = 100;
-  this.player.jetpack = 100;
-  this.game.physics.arcade.enable(this.player);
-
-  this.bullets = this.game.add.group();
-  this.bullets.enableBody = true;
-  this.bullets.physicsBodyType = Phaser.Physics.ARCADE;
-
-  this.bullets.createMultiple(50, 'jp');
-  this.bullets.setAll('checkWorldBounds', true);
-  this.bullets.setAll('outOfBoundsKill', true);
-
-  this.jetpackEmitter = this.game.add.emitter(this.player.body.x + 10, this.player.body.y + 45);
-  this.jetpackEmitter.bounce.setTo(0.5, 0.5);
-  this.jetpackEmitter.setYSpeed(500,700);
-  this.jetpackEmitter.makeParticles('jp', 1, 250, 1, true);
-  this.jetpackEmitter.maxParticleScale = 0.1;
-
-  this.player.body.bounce.y = 0;
-  this.player.body.gravity.y = 3000;
-  this.player.body.maxVelocity.x = 400;
-  this.player.body.maxVelocity.y = 1000;
-  this.player.body.collideWorldBounds = true;
-
-  this.player.animations.add('left', [0,1,2,3], 10, true);
-  this.player.animations.add('right', [5,6,7,8], 10, true);
-
   this.cursors = this.game.input.keyboard.createCursorKeys();
 
-  this.lastDirection = 'right';
   this.game.inputEnabled = true;
 
   this.crosshair = this.game.add.sprite(0, 0, 'crosshair');
   this.game.input.addMoveCallback(this.onMouseMove, this);
-  this.game.input.onDown.add(this.fire, this);
+  this.game.input.onDown.add(this.player.fire, this.player);
 
   this.createHUD();
 };
@@ -119,12 +135,12 @@ GameState.prototype.createHUD = function() {
 
 GameState.prototype.update = function() {
   // Collisions
-  this.game.physics.arcade.collide(this.player, this.platforms);
-  this.game.physics.arcade.collide(this.player, this.walls);
+  this.game.physics.arcade.collide(this.player.p, this.platforms);
+  this.game.physics.arcade.collide(this.player.p, this.walls);
   this.game.physics.arcade.collide(this.bullets, this.walls, this.collisionHandler);
   this.game.physics.arcade.collide(this.bullets, this.platforms, this.collisionHandler);
 
-  this.game.camera.follow(this.player);
+  this.game.camera.follow(this.player.p);
   this.game.camera.deadzone = new Phaser.Rectangle(150, 150, 500, 300);
   this.game.camera.focusOnXY(0, 0);
 
@@ -150,14 +166,6 @@ GameState.prototype.updateCrosshair = function(x, y) {
   this.crosshair.y = y;
 };
 
-GameState.prototype.fire = function() {
-  var bullet = this.bullets.getFirstDead();
-
-  bullet.reset(this.player.x + 10, this.player.y + 25);
-
-  this.game.physics.arcade.moveToPointer(bullet, 2000);
-};
-
 GameState.prototype.updateHUD = function() {
   if (this.game.time.fps !== 0) {
     this.fpsText.setText(this.game.time.fps + ' FPS');
@@ -170,10 +178,10 @@ GameState.prototype.updateHUD = function() {
 
 GameState.prototype.updateJetpack = function() {
   if(this.game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR) && (this.player.jetpack > 2)) {
-    this.player.body.velocity.y += -70;
+    this.player.p.body.velocity.y += -70;
     // this.player.jetpack += -2;
-    if(this.jetpackEmitter.on === false) {
-      this.jetpackEmitter.start(false, 1000, 20);
+    if(this.player.jetpackEmitter.on === false) {
+      this.player.jetpackEmitter.start(false, 1000, 20);
     }
     this.usingJetpack = true;
   } else {
@@ -184,70 +192,78 @@ GameState.prototype.updateJetpack = function() {
   }
 
   if(this.usingJetpack) {
-    this.player.body.maxVelocity.x = 800;
+    this.player.p.body.maxVelocity.x = 800;
   } else {
-    this.jetpackEmitter.on = false;
-    this.player.body.maxVelocity.x = 400;
+    this.player.jetpackEmitter.on = false;
+    this.player.p.body.maxVelocity.x = 400;
   }
 };
 
 GameState.prototype.updateMovement = function() {
-  if((this.crosshair.x - 10) > this.player.body.x) {
-    this.lastDirection = 'right';
+  if((this.crosshair.x - 10) > this.player.p.body.x) {
+
+    // Looking to right
+    this.player.lastDirection = 'right';
   } else {
-    this.lastDirection = 'left';
+
+    // Looking to left
+    this.player.lastDirection = 'left';
   }
 
-  // Player movement
   if (this.cursors.left.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.A)) {
+
+    // Going to left
     if(this.usingJetpack) {
-      this.player.body.velocity.x += -65;
-      this.jetpackEmitter.x = this.player.body.x + 23;
+      this.player.p.body.velocity.x += -65;
+      this.player.jetpackEmitter.x = this.player.p.body.x + 23;
     } else {
-      this.player.body.velocity.x += -35;
+      this.player.p.body.velocity.x += -35;
     }
 
-    this.player.animations.play(this.lastDirection);
+    this.player.p.animations.play(this.player.lastDirection);
+
   } else if(this.cursors.right.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.D)) {
+
+    // Going to right
     if(this.usingJetpack) {
-      this.jetpackEmitter.x = this.player.body.x + 10;
-      this.player.body.velocity.x += 65;
+      this.player.jetpackEmitter.x = this.player.p.body.x + 10;
+      this.player.p.body.velocity.x += 65;
     } else {
-      this.player.body.velocity.x += 35;
+      this.player.p.body.velocity.x += 35;
     }
 
-    this.player.animations.play(this.lastDirection);
+    this.player.p.animations.play(this.player.lastDirection);
   } else {
-    if (this.lastDirection === 'left') {
-      this.jetpackEmitter.x = this.player.body.x + 23;
-      this.player.frame = 2;
+    if (this.player.lastDirection === 'left') {
+      this.player.jetpackEmitter.x = this.player.p.body.x + 23;
+      this.player.p.frame = 2;
     } else {
-      this.jetpackEmitter.x = this.player.body.x + 10;
-      this.player.frame = 5;
+      this.player.jetpackEmitter.x = this.player.p.body.x + 10;
+      this.player.p.frame = 5;
     }
-    this.player.animations.stop();
+    this.player.p.animations.stop();
   }
 
-  this.jetpackEmitter.y = this.player.body.y + 45;
+  this.player.jetpackEmitter.y = this.player.p.body.y + 45;
 
 
-  if ((this.cursors.up.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.W)) && this.player.body.touching.down) {
-    this.player.body.velocity.y = -800;
+  if ((this.cursors.up.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.W)) && this.player.p.body.touching.down) {
+    this.player.p.body.velocity.y = -800;
   }
-  if ((this.cursors.down.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.S)) && !this.player.body.touching.down) {
-    this.player.body.velocity.y += 100;
+  if ((this.cursors.down.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.S)) && !this.player.p.body.touching.down) {
+    this.player.p.body.velocity.y += 100;
   }
 
-  if(this.player.body.velocity.x < 0) {
-    this.player.body.velocity.x += 20;
-  } else if(this.player.body.velocity.x > 0) {
-    this.player.body.velocity.x -= 20;
+  if(this.player.p.body.velocity.x < 0) {
+    this.player.p.body.velocity.x += 20;
+  } else if(this.player.p.body.velocity.x > 0) {
+    this.player.p.body.velocity.x -= 20;
   }
 
   // this.rifle.anchor.setTo(0.3, 0.3);
   // this.rifle.angle = -55 - getArctan((this.crosshair.x - this.rifle.x)/(this.crosshair.y - this.rifle.y));
-  // this.rifle.x = this.player.body.x + 15;
-  // this.rifle.y = this.player.body.y + 30;
+  // this.rifle.x = this.player.p.body.x + 15;
+  // this.rifle.y = this.player.p.body.y + 30;
 };
 
 // Setup game
