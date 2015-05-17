@@ -4,7 +4,7 @@
 var Player = function (game) {
   this.game = game;
 
-  this.p = this.game.add.sprite(canvasWidth + 100, 3000 - canvasHeight - 100, 'dude');
+  this.p = this.game.add.sprite(canvasWidth + 500, 3000 - canvasHeight - 500, 'newdude');
   this.focus = this.game.add.sprite(canvasWidth + 100, 3000 - canvasHeight - 100);
   this.game.physics.arcade.enable(this.p);
 
@@ -30,8 +30,10 @@ var Player = function (game) {
   this.p.body.maxVelocity.y = 1000;
   this.p.body.collideWorldBounds = true;
 
-  this.p.animations.add('left', [0,1,2,3], 10, true);
-  this.p.animations.add('right', [5,6,7,8], 10, true);
+  this.p.animations.add('left',           [28,29,30,31,32,33,34,35], 10, true);
+  this.p.animations.add('leftbackwards',  [35,34,33,32,31,30,29,28], 10, true);
+  this.p.animations.add('right',          [46,47,48,49,50,51,52,53], 10, true);
+  this.p.animations.add('rightbackwards', [53,52,51,50,49,48,47,46], 10, true);
 
   this.lastDirection = 'right';
 };
@@ -40,7 +42,7 @@ Player.prototype.fire = function() {
   var bullet = this.bullets.getFirstDead();
   this.game.physics.arcade.enable(bullet);
 
-  bullet.reset(this.p.x + 10, this.p.y + 25);
+  bullet.reset(this.p.body.x + 45, this.p.body.y + 60);
   bullet.body.gravity.y = 300;
 
   this.game.physics.arcade.moveToPointer(bullet, 2500);
@@ -48,10 +50,10 @@ Player.prototype.fire = function() {
 
 var GameState = function() {};
 
-// var getArctan = function getArctan(slope) {
-//   var deg = Math.atan(slope);
-//   return deg * (180.0 / Math.PI);
-// };
+var getArctan = function getArctan(slope) {
+  var deg = Math.atan(slope);
+  return deg * (180.0 / Math.PI);
+};
 
 // Load images and sounds
 GameState.prototype.preload = function() {
@@ -61,7 +63,7 @@ GameState.prototype.preload = function() {
   this.game.load.image('rifle', '/assets/rifle.png');
   this.game.load.image('crosshair', '/assets/target.png');
   this.game.load.image('jp', '/assets/jp.png');
-  this.game.load.spritesheet('dude', '/assets/dude.png', 32, 48);
+  this.game.load.spritesheet('newdude', '/assets/newdude.png', 100, 100);
 };
 
 // Setup the example
@@ -133,9 +135,10 @@ GameState.prototype.create = function() {
   this.cursors = this.game.input.keyboard.createCursorKeys();
 
   this.game.inputEnabled = true;
-
   this.crosshair = this.game.add.sprite(0, 0, 'crosshair');
   this.game.input.onDown.add(this.player.fire, this.player);
+
+  this.rifle = this.game.add.sprite(0,0, 'rifle');
 
   this.createHUD();
 };
@@ -238,51 +241,43 @@ GameState.prototype.updateJetpack = function() {
 };
 
 GameState.prototype.updateMovement = function() {
-  if((this.crosshair.x - 10) > this.player.p.body.x) {
-
-    // Looking to right
-    this.player.lastDirection = 'right';
-  } else {
-
-    // Looking to left
-    this.player.lastDirection = 'left';
-  }
+  
 
   if (this.cursors.left.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.A)) {
-
-    // Going to left
     if(this.usingJetpack) {
       this.player.p.body.velocity.x += -65;
-      this.player.jetpackEmitter.x = this.player.p.body.x + 23;
     } else {
       this.player.p.body.velocity.x += -35;
     }
 
+    if(this.crosshair.x-10 < this.player.p.body.x){
+      this.player.lastDirection = 'left';
+    }else this.player.lastDirection = 'rightbackwards';
     this.player.p.animations.play(this.player.lastDirection);
-
-  } else if(this.cursors.right.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.D)) {
-
-    // Going to right
+  } 
+  else if(this.cursors.right.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.D)) {
     if(this.usingJetpack) {
-      this.player.jetpackEmitter.x = this.player.p.body.x + 10;
       this.player.p.body.velocity.x += 65;
-    } else {
+    } 
+    else {
       this.player.p.body.velocity.x += 35;
     }
-
-    this.player.p.animations.play(this.player.lastDirection);
-  } else {
-    if (this.player.lastDirection === 'left') {
-      this.player.jetpackEmitter.x = this.player.p.body.x + 23;
-      this.player.p.frame = 2;
-    } else {
-      this.player.jetpackEmitter.x = this.player.p.body.x + 10;
-      this.player.p.frame = 5;
+    
+    if(this.crosshair.x-10 > this.player.p.body.x){
+      this.player.lastDirection = 'right';
+    }else this.player.lastDirection = 'leftbackwards';
+    this.player.p.animations.play(this.player.lastDirection);  
+  }else{
+    if(this.crosshair.x-10 > this.player.p.body.x){
+      this.player.p.frame = 45;
+    }else{
+      this.player.p.frame = 27;
     }
-    this.player.p.animations.stop();
+  this.player.p.animations.stop();
   }
 
-  this.player.jetpackEmitter.y = this.player.p.body.y + 45;
+  this.player.jetpackEmitter.x = this.player.p.body.x + 50;
+  this.player.jetpackEmitter.y = this.player.p.body.y + 110;
 
 
   if ((this.cursors.up.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.W)) && this.player.p.body.touching.down) {
@@ -298,10 +293,26 @@ GameState.prototype.updateMovement = function() {
     this.player.p.body.velocity.x -= 20;
   }
 
-  // this.rifle.anchor.setTo(0.3, 0.3);
-  // this.rifle.angle = -55 - getArctan((this.crosshair.x - this.rifle.x)/(this.crosshair.y - this.rifle.y));
-  // this.rifle.x = this.player.p.body.x + 15;
-  // this.rifle.y = this.player.p.body.y + 30;
+  this.rifle.anchor.setTo(0.3, 0.3);
+  this.rifle.x = this.player.p.body.x + 45;
+  this.rifle.y = this.player.p.body.y + 60;
+
+  var angleWithPos = getArctan((this.crosshair.y - this.rifle.y)/(this.crosshair.x - this.rifle.x));
+
+  if (this.crosshair.x - 10 > this.rifle.x && this.rifle.scale.x > 0){
+      this.rifle.angle = angleWithPos + 35;
+  }else if (this.crosshair.x -10 > this.rifle.x && this.rifle.scale.x < 0){
+      this.rifle.scale.x *= -1;
+      this.rifle.angle = angleWithPos + 35;
+  }else if (this.crosshair.x - 10 < this.rifle.x && this.rifle.scale.x < 0){
+      this.rifle.angle = angleWithPos - 35;
+  }else {
+      this.rifle.scale.x *= -1;
+      this.rifle.angle = angleWithPos - 35;
+  }
+
+
+
 };
 
 // Setup game
