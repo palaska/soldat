@@ -256,6 +256,7 @@ GameState.prototype.updateMovement = function() {
     this.player.p.animations.play(this.player.lastDirection);
   } 
   else if(this.cursors.right.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.D)) {
+  //else if(this.game.input.keyboard.isDown(Phaser.Keyboard.D)) {
     if(this.usingJetpack) {
       this.player.p.body.velocity.x += 65;
     } 
